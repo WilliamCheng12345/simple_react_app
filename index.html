@@ -11,11 +11,88 @@
     <div id="root"></div>
     <script type="text/babel">
       const { useState } = React;
-      const App = () => {
-        return (<div>Implement me!</div>);
+
+      function NameForm() {
+          return (
+              <form id="ageForm">
+                  <label>
+                      Name:
+                      <input id="name" type="text" />
+                  </label>
+                  <button type="submit">Submit</button>
+              </form>
+          );
       }
 
-      ReactDOM.render(<App />, document.querySelector('#root'));
+      function AgeList({ nameToAge }) {
+        const listItems = []; 
+        for(let name in nameToAge) {
+          listItems.push(<li>{name}: {nameToAge[name]}</li>)
+        }
+
+
+        return (
+          <div>
+            <h2>Age List</h2>
+            <ul>{listItems}</ul>
+          </div>
+        )
+      }
+
+    function AgePrediction() {
+      const [nameToAge, setNameToAge] = useState({}); 
+      console.log(nameToAge);
+
+      React.useEffect(() => {
+        const handleFormSubmit = (event) => {
+          event.preventDefault(); // Prevent the form from submitting through the browser
+          var name = $('#name').val();
+          if (name) {
+              $.ajax({
+                  url: 'https://api.agify.io/?name=' + name,
+                  type: 'GET',
+                  success: function(data) {
+                    if (!nameToAge[name]) {
+                      setNameToAge(prevState => {
+                        if (!prevState[name]) {
+                          return { ...prevState, [name]: data.age };
+                        }
+                        return prevState;
+                      });
+                    }
+                  },
+                  error: function() {
+                    console.log("Something went wrong"); 
+                  }
+              });
+          } else {
+              console.log("Please enter a name"); 
+          }
+        };
+
+        $('#ageForm').on('submit', handleFormSubmit);
+
+        return () => {
+          $('#ageForm').off('submit', handleFormSubmit);
+        };
+      }, []); // Empty dependency array to ensure it runs only once
+
+      return (
+        <div>
+          <h1>Welcome</h1>
+          <NameForm />
+          <AgeList nameToAge={nameToAge}/>  
+        </div>
+      )
+    }
+
+    const App = () => {
+      return (
+        <AgePrediction />
+      );
+    }
+
+    ReactDOM.render(<App />, document.querySelector('#root'));
     </script>
   </body>
 </html>
